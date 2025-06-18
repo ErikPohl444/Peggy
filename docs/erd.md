@@ -25,7 +25,7 @@ erDiagram
         string Name
         string Description
         int OwnerUserId FK
-        int? ProjectParentId FK
+        int ProjectParentId FK "optional"
         DateTime CreatedAt
     }
 
