@@ -1,3 +1,5 @@
+[![Peggy Guggenheim]](/docs/people-peggy-guggenheim-1948-calder-mobile-arc-of-petals.jpg).
+
 # Peggy
 
 ## Overview
