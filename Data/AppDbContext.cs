@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Peggy.Models;
 
@@ -6,53 +5,73 @@ namespace Peggy.Data
 {
     public class AppDbContext : DbContext
     {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
         public DbSet<User> Users { get; set; }
         public DbSet<Project> Projects { get; set; }
-        public DbSet<ProjectCollection> ProjectCollections { get; set; }
         public DbSet<Patronage> Patronages { get; set; }
         public DbSet<PatronagePayment> PatronagePayments { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlite("Data Source=peggy.db");
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure ProjectCollection relationships
-            modelBuilder.Entity<ProjectCollection>()
-                .HasOne(pc => pc.Owner)
-                .WithMany()
-                .HasForeignKey(pc => pc.OwnerUserId);
+            base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ProjectCollection>()
-                .HasMany(pc => pc.Projects)
-                .WithOne(p => p.Collection)
-                .HasForeignKey(p => p.CollectionId)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Configure User
+            modelBuilder.Entity<User>()
+                .HasKey(u => u.UserId);
 
-            // Configure Project relationships
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            // Configure Project
+            modelBuilder.Entity<Project>()
+                .HasKey(p => p.ProjectId);
+
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.Owner)
-                .WithMany()
-                .HasForeignKey(p => p.OwnerUserId);
+                .WithMany(u => u.Projects)
+                .HasForeignKey(p => p.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure Patronage relationships
+            // Configure Project's self-referencing relationship
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Parent)
+                .WithMany(p => p.ChildProjects)
+                .HasForeignKey(p => p.ProjectParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Patronage
             modelBuilder.Entity<Patronage>()
-                .HasOne(p => p.PatronUser)
-                .WithMany()
-                .HasForeignKey(p => p.PatronUserId);
+                .HasKey(p => p.PatronageId);
+
+            modelBuilder.Entity<Patronage>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Patronages)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Patronage>()
                 .HasOne(p => p.Project)
                 .WithMany(p => p.Patronages)
-                .HasForeignKey(p => p.ProjectId);
+                .HasForeignKey(p => p.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure PatronagePayment relationships
+            // Configure PatronagePayment
+            modelBuilder.Entity<PatronagePayment>()
+                .HasKey(p => p.PaymentId);
+
             modelBuilder.Entity<PatronagePayment>()
                 .HasOne(p => p.Patronage)
-                .WithMany()
-                .HasForeignKey(p => p.PatronageId);
+                .WithMany(p => p.Payments)
+                .HasForeignKey(p => p.PatronageId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 } 
