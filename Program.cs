@@ -4,6 +4,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Peggy.Data;
 using Peggy.Services;
+using Peggy.HealthChecks;
 using Serilog;
 using Serilog.Events;
 
@@ -92,6 +93,21 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IPatronageService, PatronageService>();
 builder.Services.AddScoped<IPatronagePaymentService, PatronagePaymentService>();
 
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "database" })
+    .AddCheck<ProjectServiceHealthCheck>("project-service", tags: new[] { "project-service" })
+    .AddCheck<PatronageServiceHealthCheck>("patronage-service", tags: new[] { "patronage-service" })
+    .AddCheck<PatronagePaymentServiceHealthCheck>("payment-service", tags: new[] { "payment-service" });
+
+// Add Health Checks UI
+builder.Services.AddHealthChecksUI(options =>
+{
+    options.SetEvaluationTimeInSeconds(15);
+    options.MaximumHistoryEntriesPerEndpoint(50);
+})
+.AddInMemoryStorage();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -124,6 +140,33 @@ app.UseMiddleware<ObservabilityMiddleware>();
 // Enable Prometheus metrics endpoint
 app.UseMetricServer();
 app.UseHttpMetrics();
+
+// Map health check endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(x => new
+            {
+                name = x.Key,
+                status = x.Value.Status.ToString(),
+                description = x.Value.Description,
+                duration = x.Value.Duration.ToString()
+            })
+        };
+        await context.Response.WriteAsJsonAsync(response);
+    }
+});
+
+app.MapHealthChecksUI(options =>
+{
+    options.UIPath = "/health-ui";
+    options.ApiPath = "/health-api";
+});
 
 app.MapControllers();
 
