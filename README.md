@@ -24,7 +24,9 @@ Peggy is a C# console application that manages users, projects, patronages, and 
 
 ## Documentation
 - [API Users Documentation](docs/api_users.md)
+- [Project Collections API Documentation](docs/api_project_collections.md)
 - [System Onboarding](docs/system_onboarding.md)
+- [Entity Relationship Diagram (ERD)](docs/erd.md)
 - **User Acceptance Testing (UAT) Plan**: [docs/uat.md](docs/uat.md)
 - **Observability**: [docs/observability.md](docs/observability.md)
 
