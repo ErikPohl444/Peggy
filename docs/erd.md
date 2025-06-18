@@ -26,7 +26,7 @@ erDiagram
         string Name
         string Description
         int OwnerUserId FK
-        int? CollectionId FK
+        int CollectionId FK "nullable"
         DateTime CreatedAt
     }
 
