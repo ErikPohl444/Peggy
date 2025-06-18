@@ -6,18 +6,16 @@ namespace Peggy.Models
     public class Project
     {
         public int ProjectId { get; set; }
-        public string Title { get; set; }
+        public string Name { get; set; }
         public string Description { get; set; }
-        public DateTime CreationDate { get; set; }
-        public int CreatedBy { get; set; }
-        public DateTime UpdateDate { get; set; }
-        public int UpdatedBy { get; set; }
         public int OwnerUserId { get; set; }
-        public int? CollectionId { get; set; }  // Nullable foreign key for collection
+        public DateTime CreatedAt { get; set; }
+        public int? ProjectParentId { get; set; }  // Nullable foreign key for parent project
 
         // Navigation properties
         public User Owner { get; set; }
-        public ProjectCollection Collection { get; set; }  // Navigation property for collection
         public ICollection<Patronage> Patronages { get; set; }
+        public Project Parent { get; set; }  // Navigation property for parent project
+        public ICollection<Project> ChildProjects { get; set; }  // Navigation property for child projects
     }
 } 
