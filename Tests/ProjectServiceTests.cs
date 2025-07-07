@@ -19,13 +19,13 @@ namespace Peggy.Tests
         public ProjectServiceTests()
         {
             _mockContext = new Mock<AppDbContext>();
-            _projectService = new ProjectService(_mockContext.Object);
+            _projectService = new ProjectService(_mockContext.Object, Mock.Of<Microsoft.Extensions.Logging.ILogger<ProjectService>>());
         }
 
         [Fact]
         public async Task CreateProjectAsync_ShouldAddProjectToContext()
         {
-            var project = new Project { ProjectId = 1, Description = "TestProject" };
+            var project = new Project { ProjectId = 1, Name = "TestProject", Likes = 5 };
             var mockDbSet = new Mock<DbSet<Project>>();
             _mockContext.Setup(c => c.Projects).Returns(mockDbSet.Object);
 
@@ -38,7 +38,7 @@ namespace Peggy.Tests
         [Fact]
         public async Task UpdateProjectAsync_ShouldUpdateProjectInContext()
         {
-            var project = new Project { ProjectId = 1, Description = "UpdatedProject" };
+            var project = new Project { ProjectId = 1, Name = "UpdatedProject", Likes = 10 };
             var mockDbSet = new Mock<DbSet<Project>>();
             _mockContext.Setup(c => c.Projects).Returns(mockDbSet.Object);
 
@@ -49,14 +49,14 @@ namespace Peggy.Tests
         }
 
         [Fact]
-        public async Task GetProjectByIdAsync_ShouldReturnProject()
+        public async Task GetProjectAsync_ShouldReturnProject()
         {
-            var project = new Project { ProjectId = 1, Description = "TestProject" };
+            var project = new Project { ProjectId = 1, Name = "TestProject", Likes = 3 };
             var mockDbSet = new Mock<DbSet<Project>>();
             _mockContext.Setup(c => c.Projects).Returns(mockDbSet.Object);
             mockDbSet.Setup(db => db.FindAsync(1)).ReturnsAsync(project);
 
-            var result = await _projectService.GetProjectByIdAsync(1);
+            var result = await _projectService.GetProjectAsync(1);
 
             Assert.Equal(project, result);
         }
@@ -64,7 +64,7 @@ namespace Peggy.Tests
         [Fact]
         public async Task GetAllProjectsAsync_ShouldReturnAllProjects()
         {
-            var projects = new List<Project> { new Project { ProjectId = 1, Description = "Project1" }, new Project { ProjectId = 2, Description = "Project2" } };
+            var projects = new List<Project> { new Project { ProjectId = 1, Name = "Project1", Likes = 2 }, new Project { ProjectId = 2, Name = "Project2", Likes = 4 } };
             var mockDbSet = new Mock<DbSet<Project>>();
             _mockContext.Setup(c => c.Projects).Returns(mockDbSet.Object);
             mockDbSet.Setup(db => db.ToListAsync()).ReturnsAsync(projects);
@@ -77,7 +77,7 @@ namespace Peggy.Tests
         [Fact]
         public async Task DeleteProjectAsync_ShouldRemoveProjectFromContext()
         {
-            var project = new Project { ProjectId = 1, Description = "TestProject" };
+            var project = new Project { ProjectId = 1, Name = "TestProject", Likes = 1 };
             var mockDbSet = new Mock<DbSet<Project>>();
             _mockContext.Setup(c => c.Projects).Returns(mockDbSet.Object);
             mockDbSet.Setup(db => db.FindAsync(1)).ReturnsAsync(project);
@@ -86,6 +86,13 @@ namespace Peggy.Tests
 
             mockDbSet.Verify(db => db.Remove(project), Times.Once);
             _mockContext.Verify(c => c.SaveChangesAsync(default), Times.Once);
+        }
+
+        [Fact]
+        public void Project_LikesProperty_ShouldBeSetAndGetCorrectly()
+        {
+            var project = new Project { Likes = 42 };
+            Assert.Equal(42, project.Likes);
         }
     }
 } 

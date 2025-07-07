@@ -11,6 +11,7 @@ namespace Peggy.Models
         public int OwnerUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public int? ProjectParentId { get; set; }  // Nullable foreign key for parent project
+        public int Likes { get; set; } // Number of likes for the project
 
         // Navigation properties
         public User Owner { get; set; }
